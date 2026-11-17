@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Glow Mail — Hệ Thống Mail Tạm Temporarily & Developer Tools</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  :root {
+    --bg-void: #06050b;
+    --bg-panel: rgba(19, 16, 34, 0.75);
+    --bg-panel-2: rgba(26, 22, 48, 0.5);
+    --line: rgba(255, 255, 255, 0.06);
+    --violet: #8b5cf6;
+    --magenta: #ff2f92;
+    --lime: #ccff33;
+    --cyan: #28f0ff;
+    --text: #f3f1ff;
+    --muted: #837a9f;
+    --success-color: #ccff33;
+    --warning-color: #ffb300;
+    --rainbow-gradient: linear-gradient(45deg, #ff2f92, #ffcc00, #2cfc03, #28f0ff, #8b5cf6, #ff2f92);
+  }
+
+  body.theme-matrix {
+    background: radial-gradient(circle 600px at 10% -10%, rgba(0, 255, 70, 0.1), transparent 80%), #020b04;
+    --bg-void: #020b04; --bg-panel: rgba(5, 26, 10, 0.8); --bg-panel-2: rgba(10, 38, 16, 0.5);
+    --violet: #00ff46; --magenta: #00ff88; --cyan: #00ffcc; --lime: #33ff00; --text: #dffff0; --muted: #4e8c68;
+    --rainbow-gradient: linear-gradient(45deg, #00ff46, #00ffcc, #33ff00, #00ff46);
+  }
+  body.theme-ocean {
+    background: radial-gradient(circle 600px at 10% -10%, rgba(6, 182, 212, 0.15), transparent 80%), #040d1a;
+    --bg-void: #040d1a; --bg-panel: rgba(10, 25, 47, 0.8); --bg-panel-2: rgba(17, 34, 64, 0.5);
+    --violet: #00f0ff; --magenta: #3b82f6; --cyan: #60a5fa; --lime: #00f5d4; --text: #f1f5f9; --muted: #64748b;
+    --rainbow-gradient: linear-gradient(45deg, #00f0ff, #3b82f6, #00f5d4, #00f0ff);
+  }
+  body.theme-rainbow {
+    background: linear-gradient(125deg, #0f051d, #140717, #05141a, #0c1a05, #170710);
+    background-size: 400% 400%;
+    animation: rainbowBg 15s ease infinite;
+    --bg-void: transparent;
+    --bg-panel: rgba(15, 10, 30, 0.65);
+    --bg-panel-2: rgba(5, 2, 15, 0.6);
+    --line: rgba(255, 255, 255, 0.1);
+    --violet: #a855f7; --magenta: #ec4899; --cyan: #06b6d4; --lime: #10b981;
+    --rainbow-gradient: linear-gradient(45deg, #ff0055, #ffcc00, #00ff66, #00ffff, #7f00ff, #ff0055);
+  }
+  body.theme-rainbow .panel, body.theme-rainbow .nav-center-panel {
+    border: 1px solid transparent;
+    background-image: linear-gradient(var(--bg-panel), var(--bg-panel)), var(--rainbow-gradient);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    background-size: 100% 100%, 300% 300%;
+    animation: rainbowGlow 8s linear infinite;
+    box-shadow: 0 10px 30px rgba(168, 85, 247, 0.15);
+  }
+
+  @keyframes rainbowBg { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+  body.no-effects, body.no-effects * { animation: none !important; transition: none !important; }
+  body.no-effects h1, body.no-effects .dev-name { background: var(--cyan) !important; -webkit-text-fill-color: var(--text) !important; background-clip: initial !important; }
+  body.no-effects .pulse-line { width: 100% !important; background: var(--violet) !important; opacity: 0.3; }
+  body.no-effects .btn-glow-scan::after { display: none !important; }
+  body.no-effects .neon-spinner { border-color: var(--cyan) !important; }
+
+  * { box-sizing: border-box; }
+  body {
+    background:
+      radial-gradient(circle 600px at 10% -10%, rgba(139, 92, 246, 0.18), transparent 80%),
+      radial-gradient(circle 500px at 90% 20%, rgba(255, 47, 146, 0.12), transparent 70%),
+      var(--bg-void);
+    color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; overflow-x: hidden;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; width: 100%; padding: 28px 18px 60px; }
+
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--lime); opacity: 0.85; margin-bottom: 10px; text-shadow: 0 0 8px rgba(204, 255, 51, 0.4);
+  }
+  
+  h1 {
+    font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: clamp(42px, 10vw, 90px);
+    margin: 0; line-height: 1.05; letter-spacing: -1px;
+    background: var(--rainbow-gradient); background-size: 300% auto;
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    animation: rainbowGlow 5s ease infinite;
+    filter: drop-shadow(0 2px 15px rgba(40, 240, 255, 0.4)) drop-shadow(0 4px 40px rgba(255, 47, 146, 0.25));
+  }
+
+  .dev-signature { font-family: 'Unbounded', sans-serif; font-size: 14px; font-weight: 700; margin: 12px 0 16px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .dev-name {
+    background: var(--rainbow-gradient); background-size: 300% auto; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    animation: rainbowGlow 4s linear infinite; font-weight: 900; font-size: 16px; letter-spacing: 0.5px;
+    filter: drop-shadow(0 0 8px rgba(40, 240, 255, 0.6)) drop-shadow(0 0 15px rgba(255, 47, 146, 0.4));
+  }
+
+  @keyframes rainbowGlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+  .pulse-track { margin-top: 22px; display: flex; align-items: center; height: 3px; position: relative; background: rgba(255, 255, 255, 0.03); border-radius: 10px; overflow: hidden; }
+  .pulse-line { position: absolute; left: 0; top: 0; height: 100%; width: 30%; background: linear-gradient(90deg, transparent, var(--cyan), var(--magenta), transparent); animation: pulseTravel 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+  @keyframes pulseTravel { 0% { transform: translateX(-150%); } 100% { transform: translateX(350%); } }
+
+  .panel {
+    background: var(--bg-panel); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--line); border-radius: 20px; padding: 24px; margin-bottom: 24px; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3); transition: transform 0.3s, box-shadow 0.3s;
+  }
+  .panel h2, .nav-center-panel h2 { font-family: 'Unbounded', sans-serif; font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; margin: 0 0 18px; color: var(--text); display: flex; align-items: center; gap: 8px; }
+  .panel h2 .tag, .nav-center-panel h2 .tag { font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 700; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(40, 240, 255, 0.3); color: #fff; box-shadow: 0 0 8px rgba(40, 240, 255, 0.2); }
+
+  .nav-center-panel {
+    background: rgba(23, 19, 44, 0.4); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 20px; padding: 20px; margin-bottom: 24px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+  }
+
+  .field { margin-bottom: 16px; }
+  .field label { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .length-number-input {
+    width: 60px; height: 26px; text-align: center; background: #090712; border: 1px solid var(--line);
+    border-color: rgba(139, 92, 246, 0.4); color: var(--lime); font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; font-weight: 700; border-radius: 6px; outline: none; transition: all 0.2s;
+  }
+  .length-number-input:focus { border-color: var(--cyan); box-shadow: 0 0 8px rgba(40, 240, 255, 0.3); }
+
+  .custom-username-input { width: 100%; padding: 14px 18px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg-panel-2); color: var(--text); font-size: 14px; outline: none; transition: all 0.25s ease; }
+  .custom-username-input:focus { border-color: var(--violet); box-shadow: 0 0 14px rgba(139, 92, 246, 0.25); }
+  .password-input-wrapper { position: relative; display: flex; align-items: center; }
+  .password-input-wrapper .custom-username-input { padding-right: 90px; font-family: 'JetBrains Mono', monospace; color: var(--lime); }
+  
+  .btn-copy-inline { position: absolute; right: 8px; padding: 6px 12px; background: rgba(40, 240, 255, 0.15); border: 1px solid rgba(40, 240, 255, 0.3); color: var(--cyan); border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+  .btn-copy-inline:hover { background: var(--cyan); color: #000; transform: scale(1.05); box-shadow: 0 0 12px var(--cyan); }
+
+  .domain-select {
+    width: 100%; padding: 14px 18px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg-panel-2); color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 14px; outline: none; cursor: pointer; appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23837a9f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>"); background-repeat: no-repeat; background-position: right 16px center; background-size: 16px;
+  }
+  input[type=range] { -webkit-appearance: none; width: 100%; height: 5px; border-radius: 4px; background: linear-gradient(90deg, var(--violet), var(--magenta), var(--lime)); outline: none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #fff; cursor: pointer; box-shadow: 0 0 10px rgba(139, 92, 246, 0.8); }
+
+  .inbox-controls-wrapper { display: flex; gap: 12px; margin-bottom: 14px; }
+  .search-box { flex: 1; padding: 12px 18px; border-radius: 50px; border: 1px solid var(--line); background: var(--bg-panel-2); color: var(--text); font-size: 13.5px; outline: none; }
+  .btn-refresh-inbox { padding: 0 20px; border-radius: 50px; border: 1px solid rgba(40, 240, 255, 0.3); background: rgba(40, 240, 255, 0.1); color: var(--cyan); font-weight: 700; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.25s ease; }
+  .btn-refresh-inbox:hover { background: var(--cyan); color: #000; box-shadow: 0 0 15px rgba(40, 240, 255, 0.4); transform: scale(1.05); }
+
+  .developer-panel, .formatter-panel { display: none; opacity: 0; transform: translateY(-10px); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+  .developer-panel.show, .formatter-panel.show { display: block; opacity: 1; transform: translateY(0); }
+  .language-runner-select { padding: 10px 16px; border-radius: 8px; border: 1px solid rgba(139, 92, 246, 0.3); background: #090712; color: var(--lime); font-family: 'JetBrains Mono', monospace; font-size: 13px; outline: none; width: 100%; max-width: 500px; }
+  .search-code-wrapper { display: flex; gap: 8px; margin-bottom: 10px; }
+  .search-code-input { flex: 1; padding: 10px 16px; border-radius: 8px; border: 1px solid rgba(139, 92, 246, 0.3); background: #090712; color: var(--cyan); font-family: 'JetBrains Mono', monospace; font-size: 12.5px; outline: none; }
+  .btn-search-nav { padding: 0 16px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); background: var(--bg-panel-2); color: var(--text); cursor: pointer; font-weight: 600; font-size: 12px; display: flex; align-items: center; justify-content: center; transition: all 0.25s; }
+  .btn-search-nav:hover { background: var(--violet); color: #fff; transform: translateY(-1px); box-shadow: 0 4px 10px rgba(139, 92, 246, 0.4); }
+
+  .code-editor-container { display: flex; width: 100%; height: 220px; background: #090712; border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 12px; overflow: hidden; margin-bottom: 12px; position: relative; box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8); }
+  .line-numbers { width: 42px; padding: 14px 0; background: #05040a; border-right: 1px solid rgba(255, 255, 255, 0.05); color: #4b4566; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.5; text-align: right; padding-right: 10px; user-select: none; overflow-y: hidden; white-space: pre; }
+  .scratchpad-area { flex: 1; height: 100%; background: transparent; color: #a5f3fc; border: none; padding: 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.5; resize: none; outline: none; overflow-y: auto; white-space: pre; }
+  #fileLoader, #formatterFileLoader { display: none; }
+
+  .btn-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  .btn { flex: 1; min-width: 150px; padding: 14px 20px; border: none; border-radius: 50px; font-weight: 800; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; color: #fff; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); position: relative; overflow: hidden; z-index: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn-create { background: linear-gradient(135deg, var(--violet), var(--cyan), var(--magenta)); background-size: 200% auto; box-shadow: 0 4px 15px rgba(40,240,255,0.25); }
+  .btn-create:hover { background-position: right center; transform: translateY(-2px) scale(1.04); box-shadow: 0 8px 25px rgba(40,240,255,0.5); }
+  
+  .btn-check-custom { background: linear-gradient(135deg, #a855f7, #ec4899); box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3); }
+  .btn-check-custom:hover { background: linear-gradient(135deg, #ec4899, var(--cyan)); transform: translateY(-2px) scale(1.04); box-shadow: 0 8px 25px rgba(236, 72, 153, 0.5); }
+  .btn-config { background: linear-gradient(135deg, #10b981, #06b6d4); box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3); }
+  .btn-config:hover { background: linear-gradient(135deg, #06b6d4, var(--lime)); transform: translateY(-2px) scale(1.04); color: #06050b; box-shadow: 0 8px 25px rgba(204, 255, 51, 0.5); }
+  .btn-formatter-toggle { background: linear-gradient(135deg, #3b82f6, #8b5cf6); box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3); }
+  .btn-formatter-toggle:hover { background: linear-gradient(135deg, var(--cyan), #3b82f6); transform: translateY(-2px) scale(1.04); box-shadow: 0 8px 25px rgba(40, 240, 255, 0.4); }
+
+  .btn-upload { background: linear-gradient(135deg, #1d4ed8, #2563eb); }
+  .btn-upload:hover { background: linear-gradient(135deg, #2563eb, var(--cyan)); transform: translateY(-2px) scale(1.04); box-shadow: 0 8px 20px rgba(37, 99, 235, 0.5); }
+  .btn-export { background: var(--bg-panel-2); color: var(--text); border: 1px solid rgba(255, 255, 255, 0.15); }
+  .btn-export:hover { border-color: var(--lime); color: var(--lime); transform: translateY(-2px) scale(1.04); box-shadow: 0 6px 15px rgba(204, 255, 51, 0.2); }
+  .btn-delete-all { background: linear-gradient(135deg, #ff2f92, #9a0044); }
+  .btn-delete-all:hover { background: linear-gradient(135deg, #ff5858, #ff2f92); transform: translateY(-2px) scale(1.04); box-shadow: 0 8px 25px rgba(255, 47, 146, 0.5); }
+  .btn-glow-scan::after { content: ''; position: absolute; top: -50%; left: -60%; width: 30%; height: 200%; background: rgba(255, 255, 255, 0.35); transform: rotate(30deg); animation: lightShine 3s infinite ease-in-out; z-index: 2; pointer-events: none; }
+  @keyframes lightShine { 0% { left: -60%; } 40% { left: 140%; } 100% { left: 140%; } }
+
+  .btn-mini { padding: 6px 12px; font-size: 11px; min-width: auto; border-radius: 8px; font-weight: 700; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); white-space: nowrap; }
+  .btn-copy { background: rgba(40, 240, 255, 0.1); color: var(--cyan); border: 1px solid rgba(40, 240, 255, 0.3); }
+  .btn-copy:hover { background: var(--cyan); color: #000; transform: scale(1.1); box-shadow: 0 0 12px var(--cyan); }
+  .btn-delete { background: rgba(255, 47, 146, 0.1); color: var(--magenta); border: 1px solid rgba(255, 47, 146, 0.3); }
+  .btn-delete:hover { background: var(--magenta); color: #fff; transform: scale(1.1); box-shadow: 0 0 12px var(--magenta); }
+  
+  .btn-copy-otp { background: linear-gradient(135deg, var(--lime), #7cff9e); color: #0a0912; font-weight: 800; border: none; animation: pulseGlow 2s infinite alternate; }
+  .btn-copy-otp:hover { transform: scale(1.08) !important; box-shadow: 0 0 18px var(--lime) !important; }
+  @keyframes pulseGlow { 0% { transform: scale(1); box-shadow: 0 0 8px rgba(204,255,51,0.4); } 100% { transform: scale(1.03); box-shadow: 0 0 22px rgba(204,255,51,0.7); } }
+
+  .mail-list { max-height: 230px; overflow-y: auto; background: var(--bg-panel-2); border-radius: 14px; padding: 10px; margin-bottom: 8px; border: 1px solid var(--line); }
+  .mail-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.01); padding: 12px 14px; border-radius: 10px; margin-bottom: 8px; border-left: 4px solid var(--violet); cursor: pointer; transition: all 0.2s ease; gap: 14px; }
+  .mail-item:hover { background: rgba(255,255,255,0.04); border-left-color: var(--cyan); }
+  .mail-item.active { border-left-color: var(--lime); background: rgba(204, 255, 51, 0.04); }
+  .mail-address { font-weight: 500; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 150px; color: var(--text); }
+  .btn-group-mini { display: flex; gap: 8px; flex-shrink: 0; }
+
+  .mailbox { background: var(--bg-panel-2); border-radius: 16px; padding: 20px; min-height: 220px; border: 1px solid var(--line); position: relative; }
+  .loading-container { display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px 0; }
+  .neon-spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.02); border-radius: 50%; border-top: 3px solid var(--cyan); border-right: 3px solid var(--violet); animation: spin 0.8s linear infinite; filter: drop-shadow(0 0 8px var(--cyan)); }
+  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  .loading-text { margin-top: 14px; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--muted); letter-spacing: 1.5px; animation: pulseText 1.5s ease-in-out infinite alternate; }
+  @keyframes pulseText { 0% { opacity: 0.4; } 100% { opacity: 1; color: var(--cyan); text-shadow: 0 0 8px rgba(40,240,255,0.4); } }
+
+  .message-item { background: rgba(255,255,255,0.02); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin-bottom: 16px; animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .message-header { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--muted); margin-bottom: 12px; border-bottom: 1px solid var(--line); padding-bottom: 8px; gap: 8px; }
+  .message-header b { color: var(--text); }
+
+  .otp-display-box { background: rgba(255, 179, 0, 0.05); border: 1.5px dashed rgba(255, 179, 0, 0.4); padding: 12px 16px; border-radius: 10px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .otp-display-box span { font-size: 13px; font-weight: 600; color: #fff; }
+  .otp-number { font-size: 1.5em; font-family: 'Unbounded', sans-serif; font-weight: 800; color: var(--warning-color); letter-spacing: 2px; text-shadow: 0 0 8px rgba(255, 179, 0, 0.4); }
+
+  .message-subject { font-family: 'Unbounded', sans-serif; font-weight: 600; color: var(--cyan); font-size: 14px; margin-bottom: 12px; text-shadow: 0 0 6px rgba(40,240,255,0.2); }
+  .message-body { background: #090712; padding: 16px; border-radius: 10px; color: #d1cde6; font-size: 13.5px; line-height: 1.6; white-space: pre-wrap; border: 1px solid rgba(255,255,255,0.02); word-break: break-word; overflow-x: auto; }
+  .message-body a { color: var(--cyan); text-decoration: underline; font-weight: 600; }
+
+  .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(4, 3, 8, 0.88); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); z-index: 11000; display: none; align-items: center; justify-content: center; padding: 16px; }
+  .modal-custom-box { background: #050814; border: 1px solid #1e293b; border-radius: 24px; width: 100%; max-width: 1100px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--lime); color: #0a0912; padding: 12px 24px; border-radius: 50px; font-weight: 700; font-size: 13px; display: none; z-index: 99999; box-shadow: 0 8px 30px rgba(0,0,0,0.4); }
+  .status-bar { text-align: center; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--muted); margin-top: 14px; }
+
+  .theme-btn { padding: 8px 16px; font-size: 11px; font-weight: 800; text-transform: uppercase; border-radius: 10px; border: 1px solid var(--line); color: #fff; cursor: pointer; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+  .theme-btn:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 6px 15px rgba(255, 255, 255, 0.15); }
+  .btn-toggle-lag { background: rgba(255, 47, 146, 0.2); border-color: #ff2f92; color: #ff2f92; }
+  .btn-toggle-lag.active-off { background: #ff2f92; color: #fff; }
+
+  ::-webkit-scrollbar { height: 5px; width: 5px; }
+  ::-webkit-scrollbar-track { background: #0f172a; }
+  ::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; }
+  .email-body-content a { color: #6366f1 !important; text-decoration: underline !important; }
+  .email-body-content img { max-width: 100% !important; height: auto !important; }
+
+  @media (max-width: 650px) {
+    .mail-item { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .btn-group-mini { width: 100%; justify-content: flex-end; }
+    .btn { width: 100%; }
+    .inbox-controls-wrapper { flex-direction: column; gap: 8px; }
+  }
+</style>
+</head>
+<body class="text-slate-200 font-sans">
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">⚡ CYBERPUNK MAIL · CORE PLATFORM ⚡</div>
+    <h1>Glow Mail</h1>
+    <div class="dev-signature">Dev By: <span class="dev-name">𝙃𝙮ᶻ 𝗓 𐰁 .ᐟ</span></div>
+    <p class="text-xs text-slate-400 mt-1 max-w-lg">Hệ thống Mail ảo dùng một lần tích hợp bộ lọc mã kích hoạt tự động kết hợp với bảng soạn thảo code tiện dụng.</p>
+    <div class="pulse-track"><div class="pulse-line"></div></div>
+  </header>
+
+  <div class="panel mt-6" style="border-color: rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.02); padding: 16px;">
+    <h2 style="margin-bottom: 12px;"><i class="fa-solid fa-palette text-xs"></i> Bảng điều khiển hiệu ứng & màu sắc</h2>
+    <div class="flex flex-wrap gap-3 justify-between items-center">
+      <div class="flex flex-wrap gap-2">
+        <button class="theme-btn" style="background: linear-gradient(135deg, #8b5cf6, #ff2f92);" onclick="changeTheme('cyber')">🎨 Neon Cyber</button>
+        <button class="theme-btn" style="background: linear-gradient(135deg, #00ff46, #052a0a); border-color:#00ff46;" onclick="changeTheme('matrix')">📟 Matrix Green</button>
+        <button class="theme-btn" style="background: linear-gradient(135deg, #00f0ff, #0a192f); border-color:#00f0ff;" onclick="changeTheme('ocean')">🌊 Deep Ocean</button>
+        <button class="theme-btn" style="background: linear-gradient(45deg, #ff0055, #00ffff); border-color:#fff;" onclick="changeTheme('rainbow')">🌈 Rainbow Glow</button>
+      </div>
+      <button class="theme-btn btn-toggle-lag" id="lagToggleBtn" onclick="toggleLagReducer()">⚡ Tắt Hiệu Ứng (Giảm Lag: OFF)</button>
+    </div>
+  </div>
+
+  <!-- PHẦN 1: CẤU HÌNH ĐỊNH DANH -->
+  <div class="panel">
+    <h2>1. Cấu hình định danh</h2>
+    <div class="field">
+      <label>Tên tài khoản (để trống tạo ngẫu nhiên)</label>
+      <input type="text" class="custom-username-input" id="customUsernameInput" placeholder="Ví dụ: rikahue">
+    </div>
+    <!-- Tên miền được chọn tự động từ API, không hiển thị cho người dùng -->
+    <div class="field" id="domainSelectorWrapper" style="display: none !important;">
+      <select class="domain-select" id="domainSelector" aria-hidden="true" tabindex="-1">
+        <option value="">Đang tải danh sách tên miền...</option>
+      </select>
+    </div>
+    
+    <div class="field">
+      <label>
+        Độ dài tên tài khoản ngẫu nhiên
+        <input type="number" id="lengthNumberInput" class="length-number-input" min="5" max="100" value="10" oninput="syncLengthInput(this.value, 'number_input')">
+      </label>
+      <input type="range" id="lengthSlider" min="5" max="100" value="10" oninput="syncLengthInput(this.value, 'slider_input')">
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-create btn-glow-scan" onclick="createNewMail()">⚡ Tạo Mail Mới</button>
+      <button class="btn btn-export" onclick="exportMailList()">📦 Xuất Danh Sách Mail</button>
+      <button class="btn btn-delete-all" onclick="deleteAllMails()">🗑️ Xóa Tất Cả Mail</button>
+    </div>
+  </div>
+
+  <!-- PHẦN 2: HỘP ĐỊA CHỈ ĐÃ TẠO & ĐĂNG NHẬP -->
+  <div class="panel">
+    <h2>2. Hộp địa chỉ đã tạo & Đăng nhập <span class="tag" id="mailCount">Tổng: 0</span></h2>
+    <div class="field mb-4">
+      <label>Mật khẩu của Email đang chọn</label>
+      <div class="password-input-wrapper">
+        <input type="text" class="custom-username-input" id="generatedPasswordInput" placeholder="Mật khẩu xuất hiện tại đây..." readonly>
+        <button class="btn-copy-inline" onclick="copyGeneratedPassword()">📋 Copy Pass</button>
+      </div>
+    </div>
+    <div class="mail-list" id="mailList"></div>
+  </div>
+
+  <!-- 🛠️ THANH ĐIỀU HƯỚNG 3 BUTTON -->
+  <div class="nav-center-panel">
+    <h2>🛠️ Bảng điều khiển mở rộng & Công cụ trợ năng</h2>
+    <div class="btn-row">
+      <button class="btn btn-check-custom btn-glow-scan" onclick="openCustomCheckModal()"><i class="fa-solid fa-mailbox text-xs"></i> Check Mail TM Thủ Công</button>
+      <button class="btn btn-config btn-glow-scan" onclick="toggleDeveloperTools()">🛠️ Config Code</button>
+      <button class="btn btn-formatter-toggle btn-glow-scan" onclick="toggleFormatterTools()">✨ Bộ Định Dạng File</button>
+    </div>
+  </div>
+
+  <!-- BỘ ĐỊNH DẠNG FILE THÔNG MINH -->
+  <div class="panel formatter-panel" id="formatterToolsPanel" style="border-color: rgba(236, 72, 153, 0.35); background: rgba(18, 10, 24, 0.85);">
+    <h2>✨ BỘ ĐỊNH DẠNG FILE THÔNG MINH <span class="tag" style="border-color: var(--magenta); color: var(--magenta);">Smart Formatter</span></h2>
+    <p class="text-xs text-slate-400 mb-3">Dán danh sách email hoặc văn bản vào đây. Hệ thống tự nhận diện: Nếu là Email sẽ bóc tách chuẩn form <code class="text-pink-400">1. account:... Pass:...</code>, ngược lại sẽ dàn trang văn bản rõ ràng, không rối mắt.</p>
+    <div class="field">
+      <div class="code-editor-container" style="height: 180px; border-color: rgba(236, 72, 153, 0.3);">
+        <textarea class="scratchpad-area" id="formatterTextarea" placeholder="Dán danh sách email hoặc văn bản hỗn hợp vào đây..." spellcheck="false" style="color: #fbcfe8; font-family: sans-serif;"></textarea>
+      </div>
+    </div>
+    <input type="file" id="formatterFileLoader" accept="*" onchange="handleFormatterFileUpload(event)">
+    <div class="btn-row">
+      <button class="btn btn-upload" onclick="triggerFormatterFileInput()">📂 Tải File Lên</button>
+      <button class="btn btn-export" style="min-width: 80px;" onclick="clearFormatterTextarea()">🧹 Xóa Văn Bản</button>
+      <button class="btn btn-create" style="background: linear-gradient(135deg, var(--lime), #10b981); color: #06050b;" onclick="exportFormattedTextToTxt()">💾 Tải File Về (Đã Format Chuẩn)</button>
+    </div>
+  </div>
+
+  <!-- DEVELOPER TOOLS -->
+  <div class="panel developer-panel" id="developerToolsPanel" style="border-color: rgba(40, 240, 255, 0.25); background: rgba(12, 10, 26, 0.85);">
+    <h2>🛠️ Developer Tools <span class="tag" style="border-color: var(--cyan); color: var(--cyan);">Offline Editor</span></h2>
+    <div class="field" style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+      <label>BỘ BIÊN DỊCH:</label>
+      <select class="language-runner-select" id="codeLanguage">
+        <option value="html_web">🌐 Chỉ chạy code dạng HTML hoặc những code chạy được trên web</option>
+      </select>
+    </div>
+    <div class="field">
+      <div class="search-code-wrapper">
+        <input type="text" class="search-code-input" id="searchCodeInput" placeholder="🔍 Nhập từ khóa cần tìm trong code..." onkeydown="if(event.key === 'Enter') findNextCodeMatch(event)">
+        <button class="btn-search-nav" onclick="findNextCodeMatch(event)">Tiếp theo ➔</button>
+      </div>
+      <div class="code-editor-container">
+        <div class="line-numbers" id="lineNumbers">1</div>
+        <textarea class="scratchpad-area" id="scratchpadCode" placeholder="// Nhập code..." spellcheck="false"></textarea>
+      </div>
+    </div>
+    <input type="file" id="fileLoader" accept="*" onchange="handleFileUpload(event)">
+    <div class="btn-row">
+      <button class="btn btn-upload btn-glow-scan" onclick="triggerFileInput()">📂 Tải File Lên</button>
+      <button class="btn btn-export" style="border-color: var(--cyan); color: var(--cyan);" onclick="formatScratchpadCode()">🪄 Căn Lề Code</button>
+      <button class="btn btn-create" style="background: linear-gradient(135deg, var(--magenta), var(--violet));" onclick="runCodePreview()">👁️ Chạy Thử Code</button>
+      <button class="btn btn-create" style="background: linear-gradient(135deg, var(--lime), #10b981); color: #06050b;" onclick="exportScratchpadToTxt()">💾 Xuất File TXT</button>
+      <button class="btn btn-export" style="min-width: 80px;" onclick="clearScratchpad()">🧹 Xóa</button>
+    </div>
+  </div>
+
+  <!-- HỘP THƯ ĐẾN -->
+  <div class="panel">
+    <h2>3. Hộp thư đến <span class="tag">Live Inbox</span></h2>
+    <div class="inbox-controls-wrapper">
+      <input type="text" class="search-box" id="searchMsgInput" placeholder="🔍 Gõ từ khóa để lọc tin nhắn..." oninput="filterMessages()">
+      <button class="btn-refresh-inbox" onclick="manualRefreshInbox()">🔄 Tải Lại Hòm Thư</button>
+    </div>
+    <div class="mailbox" id="mailboxContainer">
+      <div class="loading-container" id="loadingAnimation"><div class="neon-spinner"></div><div class="loading-text">ĐANG QUÉT TÌM OTP HỆ THỐNG...</div></div>
+      <div id="mailboxContent"><p style="text-align: center; color: var(--muted); font-size: 13px; padding-top: 40px;">Bấm chọn một địa chỉ Email phía trên để khởi động bộ nghe tín hiệu.</p></div>
+    </div>
+    <div class="status-bar" id="statusBar">Hệ thống sẵn sàng hoạt động...</div>
+  </div>
+</div>
+
+<!-- MODAL CHECK MAIL TM -->
+<div class="modal-overlay" id="customCheckModal">
+  <div class="modal-custom-box flex flex-col">
+    <div class="border-b border-slate-800 bg-[#0b0f19]/90 px-6 py-4 flex justify-between items-center rounded-t-2xl">
+        <div class="flex items-center gap-3">
+            <div class="bg-indigo-600/20 p-2 rounded-xl border border-indigo-500/30"><i class="fa-solid fa-mailbox text-lg text-indigo-400"></i></div>
+            <div class="text-left">
+                <h1 class="text-sm font-black tracking-wide uppercase bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Mail.tm Checker Biệt Lập</h1>
+                <p class="text-[10px] text-slate-500">Đăng nhập & Kiểm tra hộp thư cũ độc lập</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="text-[11px] font-mono text-slate-400 flex items-center gap-2">
+                <span id="custom-status-dot" class="w-2 h-2 rounded-full bg-slate-600"></span>
+                <span id="custom-status-text">Chưa đăng nhập</span>
+            </div>
+            <button onclick="closeCustomCheckModal()" class="bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold py-1.5 px-3 rounded-xl transition hover:scale-105 shadow-md">ĐÓNG ✕</button>
+        </div>
+    </div>
+
+    <div class="p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start text-left">
+        <div class="lg:col-span-1 flex flex-col gap-4">
+            <div class="bg-[#0b0f19] border border-slate-800 rounded-2xl p-4 shadow-xl space-y-3">
+                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Thông Tin Tài Khoản</span>
+                <div>
+                    <label class="text-[10px] text-slate-400">Địa chỉ Email:</label>
+                    <input type="email" id="login-email" placeholder="example@domain.com" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 mt-1 text-xs text-indigo-400 font-mono outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="text-[10px] text-slate-400">Mật khẩu (Password):</label>
+                    <input type="password" id="login-password" placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 mt-1 text-xs text-slate-300 font-mono outline-none focus:border-indigo-500">
+                </div>
+                <button onclick="loginAndCheck()" id="login-btn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2.5 rounded-xl transition flex items-center justify-center gap-2 shadow-lg hover:scale-[1.02]">
+                    <i class="fa-solid fa-right-to-bracket"></i> ĐĂNG NHẬP & QUÉT THƯ
+                </button>
+            </div>
+
+            <div class="bg-[#0b0f19] border border-slate-800 rounded-2xl p-4 flex flex-col h-[300px] shadow-xl">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Hộp Thư Đến Riêng</span>
+                    <button onclick="fetchInbox()" id="refresh-btn" class="text-slate-500 hover:text-indigo-400 hidden transition hover:scale-110"><i class="fa-solid fa-arrows-rotate text-xs"></i></button>
+                </div>
+                <div id="email-list" class="flex-grow overflow-y-auto space-y-2 pr-1 text-center py-12 text-slate-600 italic text-xs">Vui lòng đăng nhập để tải hộp thư.</div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-2 flex flex-col gap-4 min-h-[440px]">
+            <div id="bypass-panel" class="bg-gradient-to-r from-indigo-950/30 to-purple-950/30 border border-indigo-500/20 rounded-2xl p-4 shadow-xl hidden">
+                <div class="flex items-center gap-2 mb-2 text-indigo-400 text-[10px] font-bold uppercase tracking-wider">
+                    <i class="fa-solid fa-wand-magic-sparkles animate-pulse"></i> Link xác minh bóc tách được:
+                </div>
+                <div id="extracted-links" class="flex flex-wrap gap-2"></div>
+            </div>
+
+            <div class="bg-[#0b0f19] border border-slate-800 rounded-2xl p-5 flex flex-col flex-grow shadow-xl overflow-hidden text-slate-300">
+                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 block">Nội dung thư</span>
+                <div id="email-body" class="flex-grow overflow-y-auto bg-slate-950/50 border border-slate-900 rounded-xl p-4 text-xs email-body-content select-text min-h-[250px]">
+                    <div class="text-center py-24 text-slate-600 italic">Chưa chọn thư hiển thị.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toastMessage"></div>
+
+<script>
+const API_URL = 'https://api.mail.tm';
+let accountsList = JSON.parse(localStorage.getItem('temp_mails_v3')) || [];
+let currentActiveId = localStorage.getItem('active_mail_id_v3') || null;
+let updateInterval = null;
+let lastMessageCount = -1;
+
+let authToken = "";
+let autoRefreshInterval = null;
+
+const scratchpad = document.getElementById('scratchpadCode');
+const lineNumbersEle = document.getElementById('lineNumbers');
+let lastSearchQuery = ""; let currentSearchIndex = -1;
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+window.onload = function() {
+  const savedCode = localStorage.getItem('saved_scratchpad_code_v3');
+  if (savedCode) { scratchpad.value = savedCode; }
+  updateLineNumbers();
+
+  const isDevPanelOpen = localStorage.getItem('dev_panel_open_v3') === 'true';
+  const devPanel = document.getElementById('developerToolsPanel');
+  if (isDevPanelOpen) { devPanel.style.display = 'block'; setTimeout(() => devPanel.classList.add('show'), 10); }
+
+  const isFormatterOpen = localStorage.getItem('formatter_panel_open_v3') === 'true';
+  const formatterPanel = document.getElementById('formatterToolsPanel');
+  if (isFormatterOpen) { formatterPanel.style.display = 'block'; setTimeout(() => formatterPanel.classList.add('show'), 10); }
+
+  const savedTheme = localStorage.getItem('glow_theme_v3') || 'cyber';
+  changeTheme(savedTheme);
+  const savedLag = localStorage.getItem('glow_no_effects_v3') === 'true';
+  if (savedLag) { toggleLagReducer(true); }
+
+  loadAvailableDomains(); renderMailList();
+  if (currentActiveId) { selectMail(currentActiveId); }
+  startAutoRefresh();
+};
+
+function changeTheme(theme) {
+  document.body.classList.remove('theme-matrix', 'theme-ocean', 'theme-rainbow');
+  if (theme === 'matrix') document.body.classList.add('theme-matrix');
+  if (theme === 'ocean') document.body.classList.add('theme-ocean');
+  if (theme === 'rainbow') document.body.classList.add('theme-rainbow');
+  localStorage.setItem('glow_theme_v3', theme);
+  showToast(`🎨 Chuyển màu: ${theme.toUpperCase()}`);
+}
+
+function toggleLagReducer(forceLoad = false) {
+  const btn = document.getElementById('lagToggleBtn');
+  let isNoEffects = document.body.classList.contains('no-effects');
+  if (forceLoad) { isNoEffects = false; }
+  if (!isNoEffects) {
+    document.body.classList.add('no-effects');
+    btn.classList.add('active-off');
+    btn.innerText = "⚡ Mở Hiệu Ứng (Giảm Lag: ON)";
+    localStorage.setItem('glow_no_effects_v3', 'true');
+  } else {
+    document.body.classList.remove('no-effects');
+    btn.classList.remove('active-off');
+    btn.innerText = "⚡ Tắt Hiệu Ứng (Giảm Lag: OFF)";
+    localStorage.setItem('glow_no_effects_v3', 'false');
+  }
+}
+
+function openCustomCheckModal() { 
+  playMechanicalSound(500); 
+  const currentAcc = accountsList.find(acc => acc.id === currentActiveId);
+  if (currentAcc) {
+    document.getElementById('login-email').value = currentAcc.address;
+    document.getElementById('login-password').value = currentAcc.password;
+  }
+  document.getElementById('customCheckModal').style.display = 'flex'; 
+}
+
+function closeCustomCheckModal() { document.getElementById('customCheckModal').style.display = 'none'; }
+
+async function loginAndCheck() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value.trim();
+    const loginBtn = document.getElementById('login-btn');
+    if (!email || !password) { alert("Vui lòng điền đủ dữ liệu!"); return; }
+
+    loginBtn.disabled = true;
+    loginBtn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i> Đang xác thực...`;
+    updateCustomStatus("connecting", "Đang xác thực...");
+
+    try {
+        const res = await fetch(`${API_URL}/token`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ address: email, password: password })
+        });
+        if (!res.ok) throw new Error("Sai tài khoản hoặc mật khẩu!");
+        const data = await res.json();
+        authToken = data.token;
+        updateCustomStatus("online", "Đang trực tuyến / Auto Sync");
+        document.getElementById('refresh-btn').classList.remove('hidden');
+        fetchInbox();
+        if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+        autoRefreshInterval = setInterval(fetchInbox, 5000);
+        showToast("Đăng nhập hòm phụ thành công!");
+    } catch (err) {
+        alert(err.message); updateCustomStatus("offline", "Đăng nhập thất bại");
+    } finally {
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = `<i class="fa-solid fa-right-to-bracket"></i> ĐĂNG NHẬP & QUÉT THƯ`;
+    }
+}
+
+async function fetchInbox() {
+    if (!authToken) return;
+    const refreshBtn = document.getElementById('refresh-btn');
+    refreshBtn.classList.add('animate-spin');
+    try {
+        const res = await fetch(`${API_URL}/messages`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+        const data = await res.json();
+        const messages = data['hydra:member'] || [];
+        const listContainer = document.getElementById('email-list');
+
+        if (messages.length === 0) {
+            listContainer.className = "flex-grow overflow-y-auto space-y-2 pr-1 text-center py-12 text-slate-600 italic text-xs";
+            listContainer.innerHTML = "Hộp thư trống.";
+        } else {
+            listContainer.className = "flex-grow overflow-y-auto space-y-2 pr-1 text-left";
+            listContainer.innerHTML = "";
+            messages.forEach(msg => {
+                const unreadStyle = msg.seen ? "opacity-60" : "border-l-4 border-indigo-500 font-bold bg-slate-900";
+                const time = new Date(msg.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                listContainer.innerHTML += `
+                    <div onclick="readEmail('${msg.id}')" class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-900 cursor-pointer hover:border-slate-700/60 transition flex flex-col gap-0.5 text-[11px] ${unreadStyle}">
+                        <div class="flex justify-between items-center text-[10px] text-indigo-400"><span class="truncate max-w-[130px]">${escapeHTML(msg.from.address)}</span><span class="text-slate-500 font-mono">${time}</span></div>
+                        <div class="text-slate-200 truncate">${escapeHTML(msg.subject || 'Không tiêu đề')}</div>
+                    </div>`;
+            });
+        }
+    } catch (err) { console.error(err); }
+    finally { setTimeout(() => refreshBtn.classList.remove('animate-spin'), 500); }
+}
+
+async function readEmail(msgId) {
+    const bodyContainer = document.getElementById('email-body');
+    bodyContainer.innerHTML = `<div class="text-center py-20 text-slate-600 italic animate-pulse"><i class="fa-solid fa-spinner animate-spin mr-1"></i> Đang tải dữ liệu thư...</div>`;
+    try {
+        const res = await fetch(`${API_URL}/messages/${msgId}`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+        const msgData = await res.json();
+        const rawContent = msgData.html ? msgData.html : `<p class="whitespace-pre-wrap">${escapeHTML(msgData.text)}</p>`;
+        bodyContainer.innerHTML = `
+            <div class="border-b border-slate-900 pb-2 mb-3 text-left">
+                <h3 class="text-xs font-bold text-slate-100">${escapeHTML(msgData.subject || 'Không tiêu đề')}</h3>
+                <p class="text-[10px] text-slate-500 mt-0.5">Từ: ${escapeHTML(msgData.from.address)}</p>
+            </div>
+            <div class="leading-relaxed text-left text-slate-300">${rawContent}</div>
+        `;
+        const parser = new DOMParser(); const doc = parser.parseFromString(rawContent, 'text/html');
+        const links = Array.from(doc.querySelectorAll('a'));
+        const panel = document.getElementById('bypass-panel');
+        const linkList = document.getElementById('extracted-links');
+        linkList.innerHTML = "";
+        const activeLinks = links.filter(a => a.href && a.href.startsWith('http'));
+        if (activeLinks.length > 0) {
+            panel.classList.remove('hidden');
+            activeLinks.forEach((link, i) => {
+                const aBtn = document.createElement('a'); aBtn.href = link.href; aBtn.target = "_blank"; aBtn.rel = "noopener noreferrer";
+                aBtn.className = "bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-bold py-1.5 px-3 rounded-lg transition flex items-center gap-1 shadow-md hover:scale-105";
+                aBtn.innerHTML = `<i class="fa-solid fa-external-link text-[8px]"></i> ${escapeHTML(link.innerText.trim() || `Mở Link #${i+1}`)}`;
+                linkList.appendChild(aBtn);
+            });
+        } else { panel.classList.add('hidden'); }
+        fetchInbox();
+    } catch (err) { bodyContainer.innerHTML = `<div class="text-center py-20 text-red-500/60 italic">Không thể tải thư.</div>`; }
+}
+
+function updateCustomStatus(type, text) {
+    const dot = document.getElementById('custom-status-dot'); const txt = document.getElementById('custom-status-text');
+    txt.innerText = text;
+    if (type === 'online') { dot.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse"; }
+    else if (type === 'connecting') { dot.className = "w-2 h-2 rounded-full bg-amber-500 animate-spin border border-dashed border-slate-950"; }
+    else { dot.className = "w-2 h-2 rounded-full bg-rose-500"; }
+}
+
+function updateLineNumbers() {
+  const lines = scratchpad.value.split('\n'); const lineCount = Math.max(1, lines.length);
+  let numbersArr = []; for (let i = 1; i <= lineCount; i++) { numbersArr.push(i); }
+  lineNumbersEle.textContent = numbersArr.join('\n');
+}
+
+function findNextCodeMatch(event) {
+  if (event) event.preventDefault();
+  const query = document.getElementById('searchCodeInput').value; if (!query) { showToast("Vui lòng nhập từ khóa!", true); return; }
+  const codeText = scratchpad.value;
+  if (query !== lastSearchQuery) { lastSearchQuery = query; currentSearchIndex = -1; }
+  let indices = []; let idx = codeText.toLowerCase().indexOf(query.toLowerCase());
+  while (idx !== -1) { indices.push(idx); idx = codeText.toLowerCase().indexOf(query.toLowerCase(), idx + 1); }
+  if (indices.length === 0) { showToast("Không tìm thấy kết quả!", true); currentSearchIndex = -1; return; }
+  currentSearchIndex = (currentSearchIndex + 1) % indices.length;
+  const targetPos = indices[currentSearchIndex];
+  scratchpad.focus(); scratchpad.setSelectionRange(targetPos, targetPos + query.length);
+  const textBefore = codeText.substring(0, targetPos); const lineNumber = textBefore.split('\n').length;
+  scratchpad.scrollTop = (lineNumber - 3) * 19.5; showToast(`Tìm thấy tại dòng ${lineNumber}`);
+}
+
+scratchpad.addEventListener('input', () => { updateLineNumbers(); localStorage.setItem('saved_scratchpad_code_v3', scratchpad.value); });
+scratchpad.addEventListener('scroll', () => { lineNumbersEle.scrollTop = scratchpad.scrollTop; });
+
+function toggleDeveloperTools() {
+  const devPanel = document.getElementById('developerToolsPanel'); const isOpen = devPanel.classList.contains('show');
+  playMechanicalSound(isOpen ? 440 : 880);
+  if (isOpen) {
+    devPanel.classList.remove('show'); localStorage.setItem('dev_panel_open_v3', 'false');
+    setTimeout(() => { if(!devPanel.classList.contains('show')) devPanel.style.display = 'none'; }, 400);
+  } else {
+    devPanel.style.display = 'block'; setTimeout(() => { devPanel.classList.add('show'); updateLineNumbers(); }, 10);
+    localStorage.setItem('dev_panel_open_v3', 'true');
+  }
+}
+
+function toggleFormatterTools() {
+  const formatPanel = document.getElementById('formatterToolsPanel'); const isOpen = formatPanel.classList.contains('show');
+  playMechanicalSound(isOpen ? 440 : 880);
+  if (isOpen) {
+    formatPanel.classList.remove('show'); localStorage.setItem('formatter_panel_open_v3', 'false');
+    setTimeout(() => { if(!formatPanel.classList.contains('show')) formatPanel.style.display = 'none'; }, 400);
+  } else {
+    formatPanel.style.display = 'block'; setTimeout(() => { formatPanel.classList.add('show'); }, 10);
+    localStorage.setItem('formatter_panel_open_v3', 'true');
+  }
+}
+
+function triggerFormatterFileInput() { document.getElementById('formatterFileLoader').click(); }
+function handleFormatterFileUpload(event) {
+  const file = event.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) { document.getElementById('formatterTextarea').value = e.target.result; showToast(`📂 Đã nạp file văn bản!`); };
+  reader.readAsText(file);
+}
+
+function clearFormatterTextarea() { 
+  if (confirm("Xóa nội dung khung định dạng?")) { 
+    document.getElementById('formatterTextarea').value = ''; showToast("🧹 Đã dọn sạch khung văn bản!");
+  } 
+}
+
+function exportFormattedTextToTxt() {
+  const rawText = document.getElementById('formatterTextarea').value;
+  if (!rawText.trim()) { showToast("⚠️ Khung trống, không thể xuất!", true); return; }
+  let fileName = prompt("Nhập tên file định dạng xuất ra:", "danh_sach_format_chuan");
+  if (fileName === null) return;
+  fileName = fileName.trim() ? fileName.trim() : `glow_formatted_${Date.now()}`;
+  if (!fileName.endsWith('.txt')) fileName += '.txt';
+
+  let lines = rawText.split('\n');
+  let isEmailList = false;
+  let parsedAccounts = [];
+
+  lines.forEach(line => {
+    let trimmed = line.trim();
+    if (!trimmed) return;
+    if (trimmed.includes('@') && (trimmed.includes(':') || trimmed.includes('|') || trimmed.includes(' ') || !trimmed.includes(' '))) {
+      isEmailList = true;
+    }
+  });
+
+  let structuredOutput = "";
+
+  if (isEmailList) {
+    lines.forEach(line => {
+      let t = line.trim();
+      if (!t) return;
+      let parts = t.split(/[:|\s\t]+/);
+      let emailFound = "";
+      let passFound = "(Trống)";
+
+      parts.forEach(p => {
+        if (p.includes('@') && !emailFound) {
+          emailFound = p;
+        } else if (emailFound && p && p !== emailFound && passFound === "(Trống)") {
+          passFound = p;
+        }
+      });
+
+      if (!emailFound && t.includes('@')) {
+        emailFound = t;
+      }
+
+      if (emailFound) {
+        parsedAccounts.push({ email: emailFound, pass: passFound });
+      }
+    });
+
+    if (parsedAccounts.length === 0) {
+      lines.forEach((l) => {
+        if(l.trim()) parsedAccounts.push({ email: l.trim(), pass: "(Không rõ)" });
+      });
+    }
+
+    structuredOutput = "=========================================\n       DANH SÁCH TÀI KHOẢN EMAIL\n=========================================\n\n";
+    parsedAccounts.forEach((acc, idx) => {
+      structuredOutput += `${idx + 1}. account: ${acc.email}\n    Pass: ${acc.pass}\n\n`;
+    });
+    structuredOutput += "-----------------------------------------\n" + `Tổng số lượng: ${parsedAccounts.length} tài khoản\nGlow Mail Formatter Platform.`;
+
+  } else {
+    let cleanTextLines = [];
+    lines.forEach(line => {
+      let cleanLine = line.trim();
+      if (cleanLine) {
+        cleanTextLines.push(cleanLine);
+      }
+    });
+
+    structuredOutput = "=========================================\n       BẢN TRÌNH BÀY VĂN BẢN SẠCH SẼ\n=========================================\n\n";
+    cleanTextLines.forEach((para) => {
+      structuredOutput += `${para}\n\n`;
+    });
+    structuredOutput += "-----------------------------------------\n" + `Trạng thái: Đã tối ưu hóa bố cục, chống rối mắt.\nGlow Mail Formatter Platform.`;
+  }
+
+  const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([structuredOutput], { type: "text/plain;charset=utf-8" })); link.download = fileName; link.click();
+  showToast(`💾 Đã format và xuất file thành công: ${fileName}`);
+}
+
+function playMechanicalSound(freq) {
+  try {
+    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.15);
+    gain.gain.setValueAtTime(0.08, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.15);
+    osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+  } catch(e) {}
+}
+
+function playNotificationSound() {
+  try {
+    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = 'sine';
+    osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+    osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+  } catch(e) {}
+}
+
+function triggerFileInput() { document.getElementById('fileLoader').click(); }
+function handleFileUpload(event) {
+  const file = event.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) { scratchpad.value = e.target.result; updateLineNumbers(); localStorage.setItem('saved_scratchpad_code_v3', scratchpad.value); showToast(`📂 Đã nạp dữ liệu!`); };
+  reader.readAsText(file);
+}
+
+function exportScratchpadToTxt() {
+  if (!scratchpad.value.trim()) { showToast("⚠️ Không có code để xuất!", true); return; }
+  let fileName = prompt("Nhập tên file code:", "code_cua_toi"); if (fileName === null) return; 
+  fileName = fileName.trim() ? fileName.trim() : `glow_code_export_${Date.now()}`;
+  if (!fileName.endsWith('.txt')) fileName += '.txt';
+  const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([scratchpad.value], { type: "text/plain;charset=utf-8" })); link.download = fileName; link.click();
+  showToast(`💾 Đã xuất file code!`);
+}
+
+function clearScratchpad() { if (confirm("Dọn dẹp khung soạn thảo?")) { scratchpad.value = ''; updateLineNumbers(); localStorage.removeItem('saved_scratchpad_code_v3'); } }
+
+function formatScratchpadCode() {
+  const rawCode = scratchpad.value; if (!rawCode.trim()) return;
+  const lines = rawCode.split('\n'); let formatted = ""; let indentLevel = 0;
+  for (let line of lines) {
+    let trimmed = line.trim();
+    if (trimmed.startsWith('}') || trimmed.startsWith(']') || trimmed.startsWith('</')) { indentLevel = Math.max(0, indentLevel - 1); }
+    formatted += "  ".repeat(indentLevel) + trimmed + '\n';
+    if (trimmed.endsWith('{') || trimmed.endsWith('[')) { indentLevel++; }
+  }
+  scratchpad.value = formatted.trim(); updateLineNumbers();
+}
+
+function runCodePreview() {
+  let modal = document.getElementById('previewModal');
+  if (!modal) {
+    modal = document.createElement('div'); modal.id = 'previewModal';
+    modal.style = `position: fixed; top: 4%; left: 4%; width: 92%; height: 92%; background: #06050b; border: 2px solid var(--cyan); border-radius: 20px; z-index: 20000; display: flex; flex-direction: column;`;
+    modal.innerHTML = `<div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; background: rgba(19, 16, 34, 0.95);"><span style="font-family: 'Unbounded', sans-serif; color: var(--cyan); font-size: 13px;">👁️ LIVE PREVIEW</span><button onclick="document.getElementById('previewModal').style.display='none'" style="background: var(--magenta); color:#fff; border:none; padding:6px 14px; border-radius:50px; cursor:pointer;">ĐÓNG ✕</button></div><div style="flex:1;"><iframe id='previewIframe' style='width:100%; height:100%; border:none; background:#fff;'></iframe></div>`;
+    document.body.appendChild(modal);
+  }
+  modal.style.display = 'flex';
+  const iframeDoc = document.getElementById('previewIframe').contentDocument; iframeDoc.open(); iframeDoc.write(scratchpad.value); iframeDoc.close();
+}
+
+function syncLengthInput(val, inputSource) {
+  let numValue = parseInt(val) || 10;
+  if (numValue < 5) numValue = 5;
+  if (numValue > 100) numValue = 100;
+  if (inputSource === 'slider_input') { document.getElementById('lengthNumberInput').value = numValue; }
+  else if (inputSource === 'number_input') { document.getElementById('lengthSlider').value = numValue; }
+}
+
+// 🔤 BỘ TẠO CHUỖI NGẪU NHIÊN CHỈ CHỨA CHỮ THƯỜNG VÀ SỐ (BỎ CHỮ HOA)
+function getRandomAlphaNumericString(length) {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'; 
+  let result = '';
+  for (let i = 0; i < length; i++) { 
+    result += chars.charAt(Math.floor(Math.random() * chars.length)); 
+  }
+  return result;
+}
+
+async function loadAvailableDomains() {
+  const selector = document.getElementById('domainSelector');
+  try {
+    const response = await fetch(`${API_URL}/domains`); const data = await response.json(); const domains = data['hydra:member'];
+    if (domains && domains.length > 0) {
+      selector.innerHTML = '';
+      domains.forEach(d => { const option = document.createElement('option'); option.value = d.domain; option.textContent = `@${d.domain}`; selector.appendChild(option); });
+    }
+  } catch (e) {}
+}
+
+function copyGeneratedPassword() { const passVal = document.getElementById('generatedPasswordInput').value; if (!passVal) return; copyText(passVal, "📋 Đã sao chép mật khẩu Email!"); }
+
+// ⚡ TẠO MAIL MỚI (CHỈ CHỮ THƯỜNG & SỐ)
+async function createNewMail() {
+  playMechanicalSound(880);
+  const domain = document.getElementById('domainSelector').value; if (!domain) return;
+  const customVal = document.getElementById('customUsernameInput').value.trim().toLowerCase();
+  let chosenLength = parseInt(document.getElementById('lengthNumberInput').value) || 10;
+  
+  // Tên mail chỉ bao gồm a-z và 0-9
+  let username = customVal ? customVal.replace(/[^a-z0-9]/g, '') : getRandomAlphaNumericString(chosenLength);
+  if (customVal && !username) { showToast("Tên tài khoản không hợp lệ!", true); return; }
+
+  const address = `${username}@${domain}`; const password = getRandomAlphaNumericString(12);
+  try {
+    const createRes = await fetch(`${API_URL}/accounts`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address, password }) });
+    if (!createRes.ok) throw new Error("Tên mail đã tồn tại!");
+    const accountData = await createRes.json();
+    const tokenRes = await fetch(`${API_URL}/token`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address, password }) });
+    const tokenData = await tokenRes.json();
+    accountsList.push({ id: accountData.id, address, password, token: tokenData.token });
+    saveToStorage(); renderMailList(); selectMail(accountData.id);
+    document.getElementById('customUsernameInput').value = ''; showToast("Đã khởi tạo Email thành công!");
+  } catch (error) { showToast(error.message, true); }
+}
+
+function saveToStorage() { localStorage.setItem('temp_mails_v3', JSON.stringify(accountsList)); localStorage.setItem('active_mail_id_v3', currentActiveId); }
+
+function renderMailList() {
+  const listContainer = document.getElementById('mailList'); document.getElementById('mailCount').innerText = `Tổng: ${accountsList.length}`;
+  if (accountsList.length === 0) { listContainer.innerHTML = '<p style="text-align: center; color: var(--muted); font-size: 13px; padding: 15px 0;">Trống</p>'; return; }
+  listContainer.innerHTML = '';
+  accountsList.forEach(acc => {
+    const item = document.createElement('div'); item.className = `mail-item ${acc.id === currentActiveId ? 'active' : ''}`;
+    item.onclick = (e) => { if(e.target.tagName !== 'BUTTON') selectMail(acc.id); };
+    item.innerHTML = `<span class="mail-address">${acc.address}</span><div class="btn-group-mini"><button class="btn-mini btn-copy" onclick="copyText('${acc.address}', 'Đã sao chép!')">📋 Copy</button><button class="btn-mini btn-delete" onclick="deleteMail('${acc.id}')">🗑️ Xóa</button></div>`;
+    listContainer.appendChild(item);
+  });
+}
+
+function selectMail(id) {
+  currentActiveId = id; lastMessageCount = -1; document.getElementById('searchMsgInput').value = '';
+  const currentAcc = accountsList.find(acc => acc.id === id);
+  if (currentAcc && currentAcc.password) { document.getElementById('generatedPasswordInput').value = currentAcc.password; }
+  saveToStorage(); renderMailList(); startAutoRefresh(); fetchMessages();
+}
+
+function extractOTP(text) { if (!text) return null; const matches = text.match(/\b\d{4,8}\b/g); return matches ? matches[0] : null; }
+function makeLinksClickable(text) { return text ? text.replace(/(https?:\/\/[^\s]+)/g, url => `<a href="${url}" target="_blank">${url}</a>`) : ""; }
+function manualRefreshInbox() { if (!currentActiveId) return; playMechanicalSound(700); fetchMessages(true); }
+
+async function fetchMessages(isManual = false) {
+  if (!currentActiveId) return; const currentAcc = accountsList.find(acc => acc.id === currentActiveId); if (!currentAcc) return;
+  const loader = document.getElementById('loadingAnimation'); const contentZone = document.getElementById('mailboxContent');
+  if (isManual) loader.style.display = 'flex';
+  try {
+    const res = await fetch(`${API_URL}/messages${isManual ? `?t=${Date.now()}` : ''}`, { headers: { 'Authorization': `Bearer ${currentAcc.token}` } });
+    if(!res.ok) return; const data = await res.json(); const messages = data['hydra:member'] || [];
+    if (!isManual && messages.length === lastMessageCount) return;
+    if (lastMessageCount !== -1 && messages.length > lastMessageCount) { playNotificationSound(); showToast("🛎️ Có thư mới hòm chính!"); }
+    lastMessageCount = messages.length;
+
+    if (messages.length === 0) { loader.style.display = 'flex'; contentZone.innerHTML = ''; return; }
+    loader.style.display = 'none'; contentZone.innerHTML = '';
+    
+    for (let msg of messages) {
+      const detailsRes = await fetch(`${API_URL}/messages/${msg.id}`, { headers: { 'Authorization': `Bearer ${currentAcc.token}` } });
+      const details = await detailsRes.json();
+      let mailBodyText = makeLinksClickable(details.text || details.html || "");
+      const otpCode = extractOTP(details.text || details.html || "") || extractOTP(msg.subject);
+      let otpBoxHtml = otpCode ? `<div class="otp-display-box"><span>Phát hiện mã OTP: <span class="otp-number">${otpCode}</span></span><button class="btn-mini btn-copy-otp" onclick="copyText('${otpCode}', 'Đã copy: ${otpCode}')">🔑 Copy OTP</button></div>` : '';
+
+      const msgItem = document.createElement('div'); msgItem.className = 'message-item';
+      msgItem.innerHTML = `<div class="message-header"><span><b>Từ:</b> ${msg.from.address}</span><span>${new Date(msg.createdAt).toLocaleTimeString()}</span></div>${otpBoxHtml}<div class="message-subject">🚀 ${msg.subject || '(Không tiêu đề)'}</div><div class="message-body">${mailBodyText}</div>`;
+      contentZone.appendChild(msgItem);
+    }
+    filterMessages();
+  } catch (e) {}
+}
+
+function filterMessages() {
+  const query = document.getElementById('searchMsgInput').value.toLowerCase().trim();
+  const items = document.getElementsByClassName('message-item');
+  for (let item of items) { item.style.display = item.innerText.toLowerCase().includes(query) ? 'block' : 'none'; }
+}
+
+function exportMailList() {
+  if (accountsList.length === 0) { showToast("⚠️ Danh sách trống!", true); return; }
+  let fileName = prompt("Nhập tên file lưu Email:", "danh_sach_mail"); if (fileName === null) return;
+  fileName = fileName.trim() ? fileName.trim() : `glow_mails_${Date.now()}`;
+  if (!fileName.endsWith('.txt')) fileName += '.txt';
+
+  let textOutput = ""; 
+  accountsList.forEach(acc => { textOutput += `${acc.address}|${acc.password}\n`; });
+  
+  const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([textOutput], { type: "text/plain;charset=utf-8" })); link.download = fileName; link.click();
+  showToast(`📦 Xuất file định dạng Email|password thành công!`);
+}
+
+function startAutoRefresh() { if(updateInterval) clearInterval(updateInterval); updateInterval = setInterval(() => { if (currentActiveId) fetchMessages(); }, 1000); }
+
+function copyText(text, successMessage) {
+  const textArea = document.createElement("textarea"); textArea.value = text; document.body.appendChild(textArea); textArea.select();
+  try { document.execCommand('copy'); showToast(successMessage); } catch (err) {}
+  document.body.removeChild(textArea);
+}
+
+function deleteMail(id) { accountsList = accountsList.filter(acc => acc.id !== id); if (currentActiveId === id) currentActiveId = accountsList.length > 0 ? accountsList[0].id : null; saveToStorage(); renderMailList(); if (currentActiveId) selectMail(currentActiveId); }
+function deleteAllMails() { if(confirm("Xóa toàn bộ hòm thư?")) { accountsList = []; currentActiveId = null; saveToStorage(); renderMailList(); document.getElementById('generatedPasswordInput').value = ''; document.getElementById('mailboxContent').innerHTML = ''; } }
+
+function showToast(message, isError = false) {
+  const toast = document.getElementById('toastMessage'); toast.innerText = message; toast.style.background = isError ? 'var(--magenta)' : 'var(--lime)'; toast.style.display = 'block';
+  setTimeout(() => { toast.style.display = 'none'; }, 2500);
+}
+
+function escapeHTML(str) { return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)); }
+</script>
+</body>
+</html>
