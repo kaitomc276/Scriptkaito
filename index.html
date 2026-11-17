@@ -845,12 +845,22 @@ function getRandomAlphaNumericString(length) {
 async function loadAvailableDomains() {
   const selector = document.getElementById('domainSelector');
   try {
-    const response = await fetch(`${API_URL}/domains`); const data = await response.json(); const domains = data['hydra:member'];
+    const response = await fetch(`${API_URL}/domains`); 
+    const data = await response.json(); 
+    const domains = data['hydra:member'];
     if (domains && domains.length > 0) {
       selector.innerHTML = '';
-      domains.forEach(d => { const option = document.createElement('option'); option.value = d.domain; option.textContent = `@${d.domain}`; selector.appendChild(option); });
+      domains.forEach(d => { 
+        const option = document.createElement('option'); 
+        option.value = d.domain; 
+        option.textContent = `@${d.domain}`; 
+        selector.appendChild(option); 
+      });
     }
-  } catch (e) {}
+  } catch (e) {
+    // Fallback dự phòng nếu API domains lỗi hoặc bị nghẽn mạng
+    selector.innerHTML = '<option value="mail.tm">@mail.tm</option>';
+  }
 }
 
 function copyGeneratedPassword() { const passVal = document.getElementById('generatedPasswordInput').value; if (!passVal) return; copyText(passVal, "📋 Đã sao chép mật khẩu Email!"); }
